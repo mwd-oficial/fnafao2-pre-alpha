@@ -166,9 +166,11 @@ function launchFullscreen(element) {
 }
 
 iframe.addEventListener('load', () => {
-    iframe.contentWindow.document.addEventListener("click", function () {
-        launchFullscreen(document.documentElement); // a página inteira
-    })
+    setTimeout(() => {
+        iframe.contentWindow.document.addEventListener("click", function () {
+            launchFullscreen(document.documentElement); // a página inteira
+        })
+    }, 100);
 })
 
 document.addEventListener("fullscreenchange", function () {
