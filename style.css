@@ -1,0 +1,128 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: black;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+#cursor-none-div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: none !important;
+    display: none;
+}
+
+#tela-cheia {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #000;
+    z-index: 9000 !important;
+    pointer-events: none !important;
+
+
+    & span {
+        color: #fff;
+        font-size: 75px;
+    }
+
+    & p {
+        font-size: 18px;
+        color: #fff;
+        text-align: center;
+    }
+}
+
+#tela-vira-landscape {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    z-index: 9500 !important;
+    display: none;
+
+    & span {
+        font-size: 75px;
+        color: #fff;
+    }
+
+    & p {
+        color: #fff;
+        text-align: center;
+    }
+}
+
+#tela-qualidade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 30px;
+    background-color: #000;
+    z-index: 9000 !important;
+
+    & p {
+        font-size: 18px;
+        color: #fff;
+        text-align: center;
+    }
+}
+
+#opcoes-qualidade {
+    display: flex;
+    gap: 20px;
+}
+
+.btn-qualidade {
+    width: 130px;
+    height: 70px;
+    background-color: transparent;
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Hover só em dispositivos com mouse de verdade — evita comportamento no touch */
+@media (hover: hover) and (pointer: fine) {
+    .btn-qualidade:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.35);
+    }
+}
