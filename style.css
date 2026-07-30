@@ -10,6 +10,8 @@ body {
     height: 100vh;
     overflow: hidden;
     background-color: black;
+    cursor: url("fofao-cursor.png"), auto !important;
+    user-select: none;  
 }
 
 iframe {
@@ -18,13 +20,12 @@ iframe {
     border: none;
 }
 
-#cursor-none-div {
+#bloqueio-tela-inicial {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    cursor: none !important;
     display: none;
 }
 
@@ -115,7 +116,7 @@ iframe {
     border-radius: 12px;
     font-size: 18px;
     font-weight: 500;
-    cursor: pointer;
+    cursor: url("fofao-cursor.png"), auto !important;
     transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 

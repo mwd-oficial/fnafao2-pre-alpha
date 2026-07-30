@@ -17,7 +17,7 @@ setTimeout((()=>{window.parent.postMessage({acao:'parte2'}, '*');}
 */
 
 const iframe = document.querySelector('iframe');
-const cursorNoneDiv = document.querySelector("#cursor-none-div")
+const bloqueioTelaInicial = document.querySelector("#bloqueio-tela-inicial")
 
 function pausarJogo() {
     if (iframe.src.includes("iframe/index.html")) return
@@ -54,6 +54,9 @@ window.addEventListener('message', function (event) {
     if (dados) {
         switch (dados.acao) {
             case 'parte1':
+                prepararParte1();
+                break;
+            case 'parte1carregada':
                 irParte1();
                 break;
             case 'parte2':
@@ -75,26 +78,40 @@ function construirUrl(urlBase) {
     return urlBase + separador + 'quality=' + qualidadeEscolhida;
 }
 
-function irParte1() {
+function prepararParte1() {
     iframe.style.opacity = 0;
+    iframe.style.filter = "blur(100px)"
+    bloqueioTelaInicial.style.display = "block"
     iframe.src = construirUrl("./parte1/index.html");
     setTimeout(() => {
-        iframe.style.opacity = 1;
-    }, 250);
+        iframe.style.transitionDuration = "10s"
+    }, 500);
+}
+
+function irParte1() {
+    garantirListenerInicial();
+    iframe.style.opacity = 1;
+    iframe.style.filter = "blur(0px)"
+    setTimeout(() => {
+        bloqueioTelaInicial.style.display = "none"
+        setTimeout(() => {
+            iframe.style.transitionDuration = "0s"
+        }, 2000 + 100);
+    }, 8000 + 100);
 }
 
 function prepararParte2() {
     iframe.style.opacity = 0;
-    cursorNoneDiv.style.display = "block"
     setTimeout(() => {
-        iframe.style.transitionDuration = "2s"
-    }, 10);
+        iframe.style.transitionDuration = "5s"
+    }, 500);
     setTimeout(() => {
         iframe.src = construirUrl("./parte2/index.html");
     }, 6000);
 }
 
 function irParte2() {
+    garantirListenerInicial();
     const canvas = pegarCanvasDoIframe();
     if (canvas) {
         canvas.focus();
@@ -106,9 +123,8 @@ function irParte2() {
 
     iframe.style.opacity = 1;
     setTimeout(() => {
-        iframe.style.transitionDuration = "0.01s"
-        cursorNoneDiv.style.display = "none"
-    }, 2000 + 10);
+        iframe.style.transitionDuration = "0s"
+    }, 2000 + 100);
 }
 
 function pegarCanvasDoIframe() {
@@ -130,7 +146,7 @@ function mostrarEscolhaQualidade() {
 function escolherQualidade(qualidade) {
     qualidadeEscolhida = qualidade;
     telaQualidade.style.display = "none";
-    irParte1();
+    prepararParte1();
 }
 
 document.querySelector("#btn-baixa").addEventListener("click", function () {
@@ -165,6 +181,9 @@ function launchFullscreen(element) {
     }, 1);
 }
 
+bloqueioTelaInicial.addEventListener("click", function () {
+    launchFullscreen(document.documentElement);
+});
 function anexarListenerDeClique() {
     try {
         iframe.contentWindow.document.addEventListener("click", function () {

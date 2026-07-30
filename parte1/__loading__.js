@@ -15,27 +15,6 @@ pc.script.createLoadingScreen((app) => {
                 height: 100%;
                 width: 100%;
                 background-color: #000000;
-                /* Centraliza o texto horizontalmente e verticalmente */
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-
-            #loading-text {
-                color: #ffffff;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                font-size: 24px;
-                font-weight: 400;
-                letter-spacing: 2px;
-                text-align: center;
-                /* Animação suave de pulsar (opcional, dá um charme!) */
-                animation: pulse 1.8s infinite ease-in-out;
-            }
-
-            @keyframes pulse {
-                0% { opacity: 0.4; }
-                50% { opacity: 1.0; }
-                100% { opacity: 0.4; }
             }
         `;
 
@@ -48,13 +27,6 @@ pc.script.createLoadingScreen((app) => {
         const wrapper = document.createElement('div');
         wrapper.id = 'application-splash-wrapper';
         document.body.appendChild(wrapper);
-
-        // Criamos um elemento de texto simples em vez de uma tag de imagem <img>
-        const loadingText = document.createElement('div');
-        loadingText.id = 'loading-text';
-        loadingText.textContent = 'Carregando...';
-        
-        wrapper.appendChild(loadingText);
     };
 
     const hideSplash = () => {
@@ -62,6 +34,7 @@ pc.script.createLoadingScreen((app) => {
         if (splashWrapper) {
             splashWrapper.remove();
         }
+        window.parent.postMessage({acao:'parte1carregada'}, '*');
     };
 
     createCss();
