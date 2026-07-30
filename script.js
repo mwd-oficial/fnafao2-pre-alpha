@@ -165,13 +165,29 @@ function launchFullscreen(element) {
     }, 1);
 }
 
-iframe.addEventListener('load', () => {
-    setTimeout(() => {
+function anexarListenerDeClique() {
+    try {
         iframe.contentWindow.document.addEventListener("click", function () {
-            launchFullscreen(document.documentElement); // a página inteira
-        })
-    }, 100);
-})
+            launchFullscreen(document.documentElement);
+        });
+    } catch (e) {
+        console.error("Erro ao anexar listener de clique:", e);
+    }
+}
+
+function garantirListenerInicial() {
+    try {
+        if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+            anexarListenerDeClique();
+        } else {
+            iframe.addEventListener('load', anexarListenerDeClique, { once: true });
+        }
+    } catch (e) {
+        iframe.addEventListener('load', anexarListenerDeClique, { once: true });
+    }
+}
+
+garantirListenerInicial();
 
 document.addEventListener("fullscreenchange", function () {
     if (document.fullscreenElement) {
