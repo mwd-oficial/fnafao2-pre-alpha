@@ -69,7 +69,8 @@ window.addEventListener('message', function (event) {
                 prepararParte2();
                 break;
             case 'parte2carregada':
-                irParte2();
+                parte2Pronta = true
+                tentarIrParte2()
                 break;
         }
     }
@@ -82,6 +83,11 @@ let parte2Carregada = false;
 // --- Controle de erro gráfico (WebGL context lost) ---
 let transicaoForcada = false; // true durante a perda de contexto proposital da transição parte1 -> parte2
 let telaErroGraficoAtiva = false;
+
+// --- Controle de sincronização entre carregamento real e suspense visual da parte2 ---
+let parte2Pronta = false;
+let tempoMinimoSuspenseAtingido = false;
+let parte2PausadaAntecipadamente = false;
 
 function construirUrl(urlBase) {
     var separador = urlBase.indexOf('?') === -1 ? '?' : '&';
@@ -137,28 +143,57 @@ function destruirAppAtual() {
 
 function prepararParte2() {
     transicaoForcada = true // a partir daqui, qualquer webglcontextlost é esperado, não é erro
+    parte2Pronta = false
+    tempoMinimoSuspenseAtingido = false
+    parte2PausadaAntecipadamente = false
+
     cursorNone.style.display = "block"
     iframe.style.opacity = 0;
+
     setTimeout(() => {
         iframe.style.transitionDuration = "5s"
         destruirAppAtual();
         forcarPerdaContexto();
-    }, 500);
-    setTimeout(() => {
+
         iframe.contentWindow.postMessage({ acao: "fimparte1" }, "*");
         setTimeout(() => {
             iframe.src = "about:blank";
             setTimeout(() => {
-                iframe.src = construirUrl("./parte2/index.html");
+                iframe.src = construirUrl("./parte2/index.html"); // o load da parte2 já começa aqui
             }, 300);
         }, 100);
-    }, 1600);
+    }, 500);
+
+    // Tempo mínimo de suspense visual, contado a partir do início da transição.
+    // Independe de quando o iframe termina de carregar de fato.
+    setTimeout(() => {
+        tempoMinimoSuspenseAtingido = true
+        tentarIrParte2()
+    }, 2000);
+}
+
+// Só avança para irParte2() quando o load real (parte2carregada)
+// e o tempo mínimo de suspense (2s) já tiverem acontecido.
+// Se o load terminar antes do suspense, pausa o jogo até completar.
+function tentarIrParte2() {
+    if (!parte2Pronta) return;
+
+    if (tempoMinimoSuspenseAtingido) {
+        irParte2();
+        return;
+    }
+
+    if (!parte2PausadaAntecipadamente) {
+        parte2PausadaAntecipadamente = true;
+        pausarJogo();
+    }
 }
 
 function irParte2() {
     transicaoForcada = false // parte2 carregou normalmente, voltamos a monitorar erros de verdade
     monitorarContextoWebGL();
     pointerLock()
+    retomarJogo() // desfaz a pausa antecipada, caso tenha ocorrido
     iframe.style.opacity = 1;
     cursorNone.style.display = "none"
     setTimeout(() => {
@@ -203,20 +238,6 @@ function exibirErroGrafico() {
     pausarJogo();
     telaErroGrafico.style.display = "flex";
 }
-
-document.querySelector("#btn-recarregar").addEventListener("click", function () {
-    const url = new URL(window.location.href);
-    url.searchParams.set("_r", Date.now()); // força nova navegação, evita bfcache
-    window.location.href = url.toString();
-});
-
-window.addEventListener("load", function () {
-    const url = new URL(window.location.href);
-    if (url.searchParams.has("_r")) {
-        url.searchParams.delete("_r");
-        window.history.replaceState({}, "", url.toString());
-    }
-});
 
 const telaQualidade = document.querySelector("#tela-qualidade");
 
