@@ -85,24 +85,26 @@ function construirUrl(urlBase) {
 
 function prepararParte1() {
     playClicado = false
-    iframe.style.opacity = 0;
-    iframe.style.filter = "blur(100px)"
     bloqueioTelaInicial.style.display = "block"
     iframe.src = construirUrl("./parte1/index.html");
-    setTimeout(() => {
-        iframe.style.transitionDuration = "10s"
-    }, 500);
 }
 
 function irParte1() {
-    iframe.style.opacity = 1;
-    iframe.style.filter = "blur(0px)"
+    iframe.style.opacity = 0;
+    iframe.style.filter = "blur(50px)"
     setTimeout(() => {
-        bloqueioTelaInicial.style.display = "none"
+        iframe.style.transitionDuration = "10s"
+    }, 10);
+    setTimeout(() => {
+        iframe.style.opacity = 1;
+        iframe.style.filter = "blur(0px)"
         setTimeout(() => {
-            iframe.style.transitionDuration = "0s"
-        }, 2000 + 100);
-    }, 8000 + 100);
+            bloqueioTelaInicial.style.display = "none"
+            setTimeout(() => {
+                iframe.style.transitionDuration = "0s"
+            }, 2000 + 10);
+        }, 8000 + 10);
+    }, 50);
 }
 
 function forcarPerdaContexto() {
@@ -143,7 +145,7 @@ function prepararParte2() {
                 iframe.src = construirUrl("./parte2/index.html");
             }, 300);
         }, 100);
-    }, 5600);
+    }, 1600);
 }
 
 function irParte2() {
@@ -214,9 +216,6 @@ function launchFullscreen(element) {
         } else if (element.msRequestFullscreen) { // IE/Edge
             element.msRequestFullscreen();
         }
-        setTimeout(() => {
-
-        }, 1);
     }, 1);
 }
 
