@@ -18,6 +18,8 @@ setTimeout((()=>{window.parent.postMessage({acao:'parte2'}, '*');}
 
 const iframe = document.querySelector('iframe');
 const bloqueioTelaInicial = document.querySelector("#bloqueio-tela-inicial")
+const cursorNone = document.querySelector("#cursor-none")
+let playClicado = false
 
 function pausarJogo() {
     if (iframe.src.includes("iframe/index.html")) return
@@ -59,6 +61,9 @@ window.addEventListener('message', function (event) {
             case 'parte1carregada':
                 irParte1();
                 break;
+            case 'play:clicked':
+                playClicado = true
+                break;
             case 'parte2':
                 prepararParte2();
                 break;
@@ -79,6 +84,7 @@ function construirUrl(urlBase) {
 }
 
 function prepararParte1() {
+    playClicado = false
     iframe.style.opacity = 0;
     iframe.style.filter = "blur(100px)"
     bloqueioTelaInicial.style.display = "block"
@@ -89,7 +95,6 @@ function prepararParte1() {
 }
 
 function irParte1() {
-    garantirListenerInicial();
     iframe.style.opacity = 1;
     iframe.style.filter = "blur(0px)"
     setTimeout(() => {
@@ -100,38 +105,68 @@ function irParte1() {
     }, 8000 + 100);
 }
 
+function forcarPerdaContexto() {
+    try {
+        const canvas = iframe.contentDocument.querySelector('canvas');
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        const ext = gl && gl.getExtension('WEBGL_lose_context');
+        if (ext) ext.loseContext();
+    } catch (e) {
+        console.error("Erro ao forçar perda de contexto:", e);
+    }
+}
+
+function destruirAppAtual() {
+    try {
+        const app = iframe.contentWindow.pc.Application.getApplication();
+        if (app) {
+            app.destroy(); // libera o contexto WebGL, para o game loop, remove listeners
+        }
+    } catch (e) {
+        console.error("Erro ao destruir app anterior:", e);
+    }
+}
+
 function prepararParte2() {
+    cursorNone.style.display = "block"
     iframe.style.opacity = 0;
     setTimeout(() => {
         iframe.style.transitionDuration = "5s"
+        destruirAppAtual();
+        forcarPerdaContexto();
     }, 500);
     setTimeout(() => {
-        iframe.src = construirUrl("./parte2/index.html");
-    }, 6000);
+        iframe.contentWindow.postMessage({ acao: "fimparte1" }, "*");
+        setTimeout(() => {
+            iframe.src = "about:blank";
+            setTimeout(() => {
+                iframe.src = construirUrl("./parte2/index.html");
+            }, 300);
+        }, 100);
+    }, 5600);
 }
 
 function irParte2() {
-    garantirListenerInicial();
-    const canvas = pegarCanvasDoIframe();
-    if (canvas) {
-        canvas.focus();
-        canvas.requestPointerLock();
-    } else {
-        // fallback, caso o canvas ainda não exista nesse instante
-        iframe.requestPointerLock();
-    }
-
+    pointerLock()
     iframe.style.opacity = 1;
+    cursorNone.style.display = "none"
     setTimeout(() => {
         iframe.style.transitionDuration = "0s"
-    }, 2000 + 100);
+    }, 5000 + 100);
 }
 
-function pegarCanvasDoIframe() {
+function pointerLock() {
     try {
-        return iframe.contentDocument.querySelector('canvas');
+        const canvas = iframe.contentDocument.querySelector('canvas');
+        if (canvas) {
+            canvas.focus();
+            canvas.requestPointerLock();
+        } else {
+            // fallback, caso o canvas ainda não exista nesse instante
+            iframe.requestPointerLock();
+        }
     } catch (e) {
-        console.error("Erro ao acessar canvas do iframe:", e);
+        console.error("Erro ao fazer pointer lock:", e);
         return null;
     }
 }
@@ -139,7 +174,7 @@ function pegarCanvasDoIframe() {
 const telaQualidade = document.querySelector("#tela-qualidade");
 
 function mostrarEscolhaQualidade() {
-    telaCheiaEl.style.display = "none";
+    telaCheia.style.display = "none";
     telaQualidade.style.display = "flex";
 }
 
@@ -165,9 +200,10 @@ if (isCelular) {
     document.querySelector("#tela-cheia > p").innerHTML = "Para uma melhor experiência, <br> toque para ativar a tela cheia"
 }
 
-const telaCheiaEl = document.querySelector("#tela-cheia")
+const telaCheia = document.querySelector("#tela-cheia")
 function launchFullscreen(element) {
-    telaCheiaEl.style.display = "none"
+    telaCheia.style.display = "none"
+    if (playClicado) pointerLock()
     setTimeout(() => {
         if (element.requestFullscreen) {
             element.requestFullscreen();
@@ -178,48 +214,28 @@ function launchFullscreen(element) {
         } else if (element.msRequestFullscreen) { // IE/Edge
             element.msRequestFullscreen();
         }
+        setTimeout(() => {
+
+        }, 1);
     }, 1);
 }
 
-bloqueioTelaInicial.addEventListener("click", function () {
+telaCheia.addEventListener("click", function () {
     launchFullscreen(document.documentElement);
 });
-function anexarListenerDeClique() {
-    try {
-        iframe.contentWindow.document.addEventListener("click", function () {
-            launchFullscreen(document.documentElement);
-        });
-    } catch (e) {
-        console.error("Erro ao anexar listener de clique:", e);
-    }
-}
-
-function garantirListenerInicial() {
-    try {
-        if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
-            anexarListenerDeClique();
-        } else {
-            iframe.addEventListener('load', anexarListenerDeClique, { once: true });
-        }
-    } catch (e) {
-        iframe.addEventListener('load', anexarListenerDeClique, { once: true });
-    }
-}
-
-garantirListenerInicial();
 
 document.addEventListener("fullscreenchange", function () {
     if (document.fullscreenElement) {
         if (!qualidadeEscolhida) {
             mostrarEscolhaQualidade();
         } else {
-            telaCheiaEl.style.display = "none"
+            telaCheia.style.display = "none"
             if (!algumaTelaDeOverlayVisivel()) {
                 retomarJogo()
             }
         }
     } else {
-        telaCheiaEl.style.display = "flex"
+        telaCheia.style.display = "flex"
         telaQualidade.style.display = "none"
         pausarJogo()
     }
@@ -244,7 +260,12 @@ function reforcarPausaSeNecessario() {
     }
 }
 
-document.addEventListener("visibilitychange", reforcarPausaSeNecessario);
+document.addEventListener("visibilitychange", function () {
+    reforcarPausaSeNecessario()
+    if (!document.hidden && playClicado) {
+        pointerLock()
+    }
+});
 window.addEventListener("focus", reforcarPausaSeNecessario);
 window.addEventListener("pageshow", reforcarPausaSeNecessario);
 

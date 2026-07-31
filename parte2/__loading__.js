@@ -2,7 +2,7 @@ pc.script.createLoadingScreen((app) => {
     const createCss = () => {
         const css = `
             body {
-                background-color: #000000;
+                background-color: #189705af;
                 margin: 0;
                 padding: 0;
                 overflow: hidden;
@@ -14,7 +14,7 @@ pc.script.createLoadingScreen((app) => {
                 left: 0;
                 height: 100%;
                 width: 100%;
-                background-color: #000000;
+                background-color: #189705af;
             }
         `;
 
