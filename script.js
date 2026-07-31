@@ -210,6 +210,14 @@ document.querySelector("#btn-recarregar").addEventListener("click", function () 
     window.location.href = url.toString();
 });
 
+window.addEventListener("load", function () {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("_r")) {
+        url.searchParams.delete("_r");
+        window.history.replaceState({}, "", url.toString());
+    }
+});
+
 const telaQualidade = document.querySelector("#tela-qualidade");
 
 function mostrarEscolhaQualidade() {
