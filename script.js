@@ -19,7 +19,12 @@ setTimeout((()=>{window.parent.postMessage({acao:'parte2'}, '*');}
 const iframe = document.querySelector('iframe');
 const bloqueioTelaInicial = document.querySelector("#bloqueio-tela-inicial")
 const cursorNone = document.querySelector("#cursor-none")
+const telaErroGrafico = document.querySelector("#tela-erro-grafico")
 let playClicado = false
+
+// --- Parâmetro de qualidade vindo da URL (usado pelo botão de recuperação de erro) ---
+const urlParams = new URLSearchParams(window.location.search);
+const qualidadeForcadaUrl = urlParams.get("quality");
 
 function pausarJogo() {
     if (iframe.src.includes("iframe/index.html")) return
@@ -78,6 +83,10 @@ window.addEventListener('message', function (event) {
 let qualidadeEscolhida = null;
 let parte2Carregada = false;
 
+// --- Controle de erro gráfico (WebGL context lost) ---
+let transicaoForcada = false; // true durante a perda de contexto proposital da transição parte1 -> parte2
+let telaErroGraficoAtiva = false;
+
 function construirUrl(urlBase) {
     var separador = urlBase.indexOf('?') === -1 ? '?' : '&';
     return urlBase + separador + 'quality=' + qualidadeEscolhida;
@@ -90,6 +99,7 @@ function prepararParte1() {
 }
 
 function irParte1() {
+    monitorarContextoWebGL();
     iframe.style.opacity = 0;
     iframe.style.filter = "blur(50px)"
     setTimeout(() => {
@@ -130,6 +140,7 @@ function destruirAppAtual() {
 }
 
 function prepararParte2() {
+    transicaoForcada = true // a partir daqui, qualquer webglcontextlost é esperado, não é erro
     cursorNone.style.display = "block"
     iframe.style.opacity = 0;
     setTimeout(() => {
@@ -149,6 +160,8 @@ function prepararParte2() {
 }
 
 function irParte2() {
+    transicaoForcada = false // parte2 carregou normalmente, voltamos a monitorar erros de verdade
+    monitorarContextoWebGL();
     pointerLock()
     iframe.style.opacity = 1;
     cursorNone.style.display = "none"
@@ -172,6 +185,34 @@ function pointerLock() {
         return null;
     }
 }
+
+// --- Monitoramento de perda de contexto WebGL (tela branca / rostinho triste) ---
+function monitorarContextoWebGL() {
+    try {
+        const canvas = iframe.contentDocument.querySelector('canvas');
+        if (canvas) {
+            canvas.addEventListener('webglcontextlost', function (event) {
+                if (transicaoForcada) return; // perda esperada, provocada por forcarPerdaContexto()
+                exibirErroGrafico();
+            }, { once: true });
+        }
+    } catch (e) {
+        console.error("Erro ao monitorar contexto WebGL:", e);
+    }
+}
+
+function exibirErroGrafico() {
+    if (telaErroGraficoAtiva) return;
+    telaErroGraficoAtiva = true;
+    pausarJogo();
+    telaErroGrafico.style.display = "flex";
+}
+
+document.querySelector("#btn-recarregar-baixa").addEventListener("click", function () {
+    const url = new URL(window.location.href);
+    url.searchParams.set("quality", "low");
+    window.location.href = url.toString();
+});
 
 const telaQualidade = document.querySelector("#tela-qualidade");
 
@@ -226,7 +267,12 @@ telaCheia.addEventListener("click", function () {
 document.addEventListener("fullscreenchange", function () {
     if (document.fullscreenElement) {
         if (!qualidadeEscolhida) {
-            mostrarEscolhaQualidade();
+            if (qualidadeForcadaUrl === "low" || qualidadeForcadaUrl === "high") {
+                // Veio de um reload feito pelo botão de erro (ou link direto) — pula a tela de escolha
+                escolherQualidade(qualidadeForcadaUrl);
+            } else {
+                mostrarEscolhaQualidade();
+            }
         } else {
             telaCheia.style.display = "none"
             if (!algumaTelaDeOverlayVisivel()) {
@@ -247,7 +293,8 @@ function algumaTelaDeOverlayVisivel() {
     return (
         !document.fullscreenElement ||
         telaQualidade.style.display === "flex" ||
-        telaViraLandscape.style.display === "flex"
+        telaViraLandscape.style.display === "flex" ||
+        telaErroGrafico.style.display === "flex"
     );
 }
 
