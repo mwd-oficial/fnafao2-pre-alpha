@@ -20,6 +20,35 @@ iframe {
     border: none;
 }
 
+
+#tela-carregamento {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: #000;
+    display: none;
+
+    & img {
+        animation: pulsarOpacidade 1.5s ease-in-out infinite alternate;
+        width: 100px;
+    }
+}
+
+@keyframes pulsarOpacidade {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0.25;
+    }
+}
+
 #cursor-none {
     position: absolute;
     top: 0;

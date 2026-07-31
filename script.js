@@ -17,6 +17,7 @@ setTimeout((()=>{window.parent.postMessage({acao:'parte2'}, '*');}
 */
 
 const iframe = document.querySelector('iframe');
+const telaCarregamento = document.querySelector("#tela-carregamento")
 const bloqueioTelaInicial = document.querySelector("#bloqueio-tela-inicial")
 const cursorNone = document.querySelector("#cursor-none")
 const telaErroGrafico = document.querySelector("#tela-erro-grafico")
@@ -97,8 +98,9 @@ function construirUrl(urlBase) {
 function prepararParte1() {
     playClicado = false
     bloqueioTelaInicial.style.display = "block"
+    telaCarregamento.style.display = "flex"
     iframe.src = construirUrl("./parte1/index.html");
-    iframe.style.opacity = 0;
+    iframe.style.opacity = 0.25;
     iframe.style.filter = "blur(50px)"
     setTimeout(() => {
         iframe.style.transitionDuration = "10s"
@@ -108,6 +110,7 @@ function prepararParte1() {
 function irParte1() {
     monitorarContextoWebGL();
     setTimeout(() => {
+        telaCarregamento.style.display = "none"
         iframe.style.opacity = 1;
         iframe.style.filter = "blur(0px)"
         setTimeout(() => {
@@ -332,7 +335,37 @@ document.addEventListener("visibilitychange", function () {
         pointerLock()
     }
 });
-window.addEventListener("focus", reforcarPausaSeNecessario);
+
+window.addEventListener("blur", function () {
+    reforcarPausaSeNecessario();
+});
+
+window.addEventListener("focus", function () {
+    reforcarPausaSeNecessario();
+    if (playClicado) {
+        pointerLock();
+    }
+});
+
+let janelaTemFoco = document.hasFocus();
+
+setInterval(() => {
+    const focoAtual = document.hasFocus();
+    if (focoAtual !== janelaTemFoco) {
+        janelaTemFoco = focoAtual;
+        if (!janelaTemFoco) {
+            pausarJogo()
+            reforcarPausaSeNecessario();
+        } else {
+            retomarJogo()
+            reforcarPausaSeNecessario();
+            if (playClicado) {
+                pointerLock();
+            }
+        }
+    }
+}, 200); // 200ms é suficiente e barato o bastante pra não pesar
+
 window.addEventListener("pageshow", reforcarPausaSeNecessario);
 
 window.addEventListener("resize", verificaOrientacao)
