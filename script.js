@@ -204,7 +204,7 @@ function exibirErroGrafico() {
     telaErroGrafico.style.display = "flex";
 }
 
-document.querySelector("#btn-recarregar-baixa").addEventListener("click", function () {
+document.querySelector("#btn-recarregar").addEventListener("click", function () {
     const url = new URL(window.location.href);
     url.searchParams.set("_r", Date.now()); // força nova navegação, evita bfcache
     window.location.href = url.toString();
